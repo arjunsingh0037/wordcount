@@ -39,7 +39,11 @@ require_once("$CFG->dirroot/mod/url/lib.php");
 function url_appears_valid_url($url) {
     if (preg_match('/^(\/|https?:|ftp:)/i', $url)) {
         // note: this is not exact validation, we look for severely malformed URLs only
-        return (bool)preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[a-z0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
+        if (extension_loaded('intl')) {
+            return (bool)preg_match('/^[a-zA-Z]+:\/\/([^:@\s]+:[^@\s]+@)?[\pL0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/u', $url);
+        } else {
+            return (bool)preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[a-z0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
+        }
     } else {
         return (bool)preg_match('/^[a-z]+:\/\/...*$/i', $url);
     }
@@ -90,7 +94,11 @@ function url_get_full_url($url, $cm, $course, $config=null) {
 
     if (preg_match('/^(\/|https?:|ftp:)/i', $fullurl) or preg_match('|^/|', $fullurl)) {
         // encode extra chars in URLs - this does not make it always valid, but it helps with some UTF-8 problems
-        $allowed = "a-zA-Z0-9".preg_quote(';/?:@=&$_.+!*(),-#%', '/');
+        if (extension_loaded('intl')) {
+            $allowed = "[\pL]a-zA-Z0-9".preg_quote(';/?:@=&$_.+!*(),-#%', '/');
+        } else {
+            $allowed = "a-zA-Z0-9".preg_quote(';/?:@=&$_.+!*(),-#%', '/');
+        }
         $fullurl = preg_replace_callback("/[^$allowed]/", 'url_filter_callback', $fullurl);
     } else {
         // encode special chars only
@@ -124,6 +132,10 @@ function url_get_full_url($url, $cm, $course, $config=null) {
                 $fullurl = $fullurl.$join.implode('&', $parameters);
             }
         }
+    }
+
+    if (extension_loaded('intl')) {
+        $fullurl = idn_to_utf8($fullurl);
     }
 
     // encode all & to &amp; entity

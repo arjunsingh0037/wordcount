@@ -130,6 +130,10 @@ class mod_url_mod_form extends moodleform_mod {
     }
 
     function data_preprocessing(&$default_values) {
+        if (extension_loaded('intl')) {
+            $default_values['externalurl'] = idn_to_utf8($default_values['externalurl']);
+        }
+
         if (!empty($default_values['displayoptions'])) {
             $displayoptions = unserialize($default_values['displayoptions']);
             if (isset($displayoptions['printintro'])) {

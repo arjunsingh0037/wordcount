@@ -123,7 +123,11 @@ function url_add_instance($data, $mform) {
     }
     $data->displayoptions = serialize($displayoptions);
 
-    $data->externalurl = url_fix_submitted_url($data->externalurl);
+    if (extension_loaded('intl')) {
+        $data->externalurl = idn_to_ascii(url_fix_submitted_url($data->externalurl));
+    } else {
+        $data->externalurl = url_fix_submitted_url($data->externalurl);
+    }
 
     $data->timemodified = time();
     $data->id = $DB->insert_record('url', $data);
@@ -163,7 +167,11 @@ function url_update_instance($data, $mform) {
     }
     $data->displayoptions = serialize($displayoptions);
 
-    $data->externalurl = url_fix_submitted_url($data->externalurl);
+    if (extension_loaded('intl')) {
+        $data->externalurl = idn_to_ascii(url_fix_submitted_url($data->externalurl));
+    } else {
+        $data->externalurl = url_fix_submitted_url($data->externalurl);
+    }
 
     $data->timemodified = time();
     $data->id           = $data->instance;

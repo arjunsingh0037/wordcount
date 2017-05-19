@@ -53,6 +53,7 @@ class mod_url_lib_testcase extends advanced_testcase {
     public function test_url_appears_valid_url() {
         $this->assertTrue(url_appears_valid_url('http://example'));
         $this->assertTrue(url_appears_valid_url('http://www.example.com'));
+        $this->assertTrue(url_appears_valid_url('http://www.examplé.com'));
         $this->assertTrue(url_appears_valid_url('http://www.exa-mple2.com'));
         $this->assertTrue(url_appears_valid_url('http://www.example.com/~nobody/index.html'));
         $this->assertTrue(url_appears_valid_url('http://www.example.com#hmm'));
@@ -67,7 +68,6 @@ class mod_url_lib_testcase extends advanced_testcase {
         $this->assertFalse(url_appears_valid_url('http:/example.com'));
         $this->assertFalse(url_appears_valid_url('http://'));
         $this->assertFalse(url_appears_valid_url('http://www.exa mple.com'));
-        $this->assertFalse(url_appears_valid_url('http://www.examplé.com'));
         $this->assertFalse(url_appears_valid_url('http://@www.example.com'));
         $this->assertFalse(url_appears_valid_url('http://user:@www.example.com'));
 
