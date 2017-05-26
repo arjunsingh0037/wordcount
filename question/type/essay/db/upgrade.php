@@ -30,7 +30,9 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion the version we are upgrading from.
  */
 function xmldb_qtype_essay_upgrade($oldversion) {
-    global $CFG;
+    global $CFG, $DB;
+
+    $dbman = $DB->get_manager();
 
     // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
@@ -40,6 +42,21 @@ function xmldb_qtype_essay_upgrade($oldversion) {
 
     // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
+
+    if ($oldversion < 2017111300) {
+
+        // Add "latest" column to submissions table to mark the latest attempt.
+        $table = new xmldb_table('qtype_essay_options');
+        $field = new xmldb_field('filetypeslist', XMLDB_TYPE_TEXT, null, null, null, null, null, 'responsetemplateformat');
+
+        // Conditionally launch add field latest.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111300, 'qtype', 'essay');
+    }
 
     return true;
 }

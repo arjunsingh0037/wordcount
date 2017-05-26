@@ -23,10 +23,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['acceptedfiletypes'] = 'Accepted file types';
+$string['acceptedfiletypes_help'] = 'Accepted file types can be restricted by entering a list of file extensions. If the field is left empty, then all file types are allowed.';
 $string['allowattachments'] = 'Allow attachments';
 $string['attachmentsoptional'] = 'Attachments are optional';
 $string['attachmentsrequired'] = 'Require attachments';
 $string['attachmentsrequired_help'] = 'This option specifies the minimum number of attachments required for a response to be considered gradable.';
+$string['err_wrongfileextension'] = 'Some files ({$a->wrongfiles}) cannot be uploaded. Only file types {$a->whitelist} are allowed.';
+$string['filesofthesetypes'] = 'Files of these types may be added to the submission:';
 $string['formateditor'] = 'HTML editor';
 $string['formateditorfilepicker'] = 'HTML editor with file picker';
 $string['formatmonospaced'] = 'Plain text, monospaced font';
@@ -38,6 +42,7 @@ $string['mustattach'] = 'When "No online text" is selected, or responses are opt
 $string['mustrequire'] = 'When "No online text" is selected, or responses are optional, you must require at least one attachment.';
 $string['mustrequirefewer'] = 'You cannot require more attachments than you allow.';
 $string['nlines'] = '{$a} lines';
+$string['nonexistentfiletypes'] = 'The following file types were not recognised: {$a}';
 $string['pluginname'] = 'Essay';
 $string['pluginname_help'] = 'In response to a question, the respondent may upload one or more files and/or enter text online. A response template may be provided. Responses must be graded manually.';
 $string['pluginname_link'] = 'question/type/essay';

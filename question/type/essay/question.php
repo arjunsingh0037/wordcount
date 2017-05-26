@@ -51,6 +51,8 @@ class qtype_essay_question extends question_with_responses {
     public $graderinfoformat;
     public $responsetemplate;
     public $responsetemplateformat;
+    /** @var array The string array of file types accepted upon file submission. */
+    public $filetypeslist;
 
     public function make_behaviour(question_attempt $qa, $preferredbehaviour) {
         return question_engine::make_behaviour('manualgraded', $qa, $preferredbehaviour);
@@ -90,28 +92,68 @@ class qtype_essay_question extends question_with_responses {
         return null;
     }
 
+    /**
+     * Used by many of the behaviours, to work out whether the student's
+     * response to the question is complete. That is, whether the question attempt
+     * should move to the COMPLETE or INCOMPLETE state.
+     *
+     * @param array $response responses, as returned by
+     *      {@link question_attempt_step::get_qt_data()}.
+     * @return bool whether this response is a complete answer to this question.
+     */
     public function is_complete_response(array $response) {
         // Determine if the given response has online text and attachments.
         $hasinlinetext = array_key_exists('answer', $response) && ($response['answer'] !== '');
         $hasattachments = array_key_exists('attachments', $response)
             && $response['attachments'] instanceof question_response_files;
-
         // Determine the number of attachments present.
         if ($hasattachments) {
+            // Check the filetypes.
+            $filetypesutil = new \core_form\filetypes_util();
+            $whitelist = $filetypesutil->normalize_file_types($this->filetypeslist);
+            $wrongfiles = array();
+            foreach ($response['attachments']->get_files() as $file) {
+                if (!$filetypesutil->is_allowed_file_type($file->get_filename(), $whitelist)) {
+                    $wrongfiles[] = $file->get_filename();
+                }
+            }
+            if ($wrongfiles) { // At least one filetype is wrong.
+                return false;
+            }
             $attachcount = count($response['attachments']->get_files());
         } else {
             $attachcount = 0;
         }
-
         // Determine if we have /some/ content to be graded.
         $hascontent = $hasinlinetext || ($attachcount > 0);
-
         // Determine if we meet the optional requirements.
         $meetsinlinereq = $hasinlinetext || (!$this->responserequired) || ($this->responseformat == 'noinline');
         $meetsattachmentreq = ($attachcount >= $this->attachmentsrequired);
-
         // The response is complete iff all of our requirements are met.
         return $hascontent && $meetsinlinereq && $meetsattachmentreq;
+    }
+
+    /**
+     * Used by many of the behaviours, to work out whether the student's
+     * response to the question is gradable. That is, whether the question attempt
+     * should move to the TODO or GAVEUP state.
+     * If there are either file uploads or text submissions, true is returned,
+     * since there is something to grade.
+     *
+     * @param array $response responses, as returned by
+     *      {@link question_attempt_step::get_qt_data()}.
+     * @return bool whether this response is a gradable answer to this question.
+     */
+    public function is_gradable_response(array $response) {
+        // Determine if the given response has online text and attachments.
+        if (array_key_exists('answer', $response) && ($response['answer'] !== '')) {
+            return true;
+        } else if (array_key_exists('attachments', $response)
+                && $response['attachments'] instanceof question_response_files) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function is_same_response(array $prevresponse, array $newresponse) {

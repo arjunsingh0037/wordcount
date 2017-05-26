@@ -160,6 +160,7 @@ class qtype_essay_question_test extends advanced_testcase {
         $essay->responserequired = 1;
         $essay->attachmentsrequired = 0;
         $essay->responseformat = 'editor';
+        $essay->filetypeslist = '';
 
         // The empty string should be considered an incomplete response, as should a lack of a response.
         $this->assertFalse($essay->is_complete_response(array('answer' => '')));
@@ -172,6 +173,7 @@ class qtype_essay_question_test extends advanced_testcase {
 
         // Test the case where two files are required.
         $essay->attachmentsrequired = 2;
+        $essay->filetypeslist = '';
 
         // Attaching less than two files should result in an incomplete response.
         $this->assertFalse($essay->is_complete_response(array('answer' => 'A')));
@@ -202,6 +204,7 @@ class qtype_essay_question_test extends advanced_testcase {
 
         // Test the case in which both the response and online text are optional.
         $essay->attachmentsrequired = 0;
+        $essay->filetypeslist = '';
 
         // Providing no answer and no attachment should result in an incomplete
         // response.

@@ -65,6 +65,10 @@ class qtype_essay_edit_form extends question_edit_form {
         $mform->addHelpButton('attachmentsrequired', 'attachmentsrequired', 'qtype_essay');
         $mform->disabledIf('attachmentsrequired', 'attachments', 'eq', 0);
 
+        $mform->addElement('filetypes', 'filetypeslist', get_string('filesofthesetypes', 'qtype_essay'), array('size' => '60'));
+        $mform->addHelpButton('filetypeslist', 'acceptedfiletypes', 'qtype_essay');
+        $mform->disabledIf('filetypeslist', 'attachments', 'eq', 0);
+
         $mform->addElement('header', 'responsetemplateheader', get_string('responsetemplateheader', 'qtype_essay'));
         $mform->addElement('editor', 'responsetemplate', get_string('responsetemplate', 'qtype_essay'),
                 array('rows' => 10),  array_merge($this->editoroptions, array('maxfiles' => 0)));
@@ -88,6 +92,7 @@ class qtype_essay_edit_form extends question_edit_form {
         $question->responsefieldlines = $question->options->responsefieldlines;
         $question->attachments = $question->options->attachments;
         $question->attachmentsrequired = $question->options->attachmentsrequired;
+        $question->filetypeslist = $question->options->filetypeslist;
 
         $draftid = file_get_submitted_draft_itemid('graderinfo');
         $question->graderinfo = array();
@@ -113,25 +118,21 @@ class qtype_essay_edit_form extends question_edit_form {
 
     public function validation($fromform, $files) {
         $errors = parent::validation($fromform, $files);
-
         // Don't allow both 'no inline response' and 'no attachments' to be selected,
         // as these options would result in there being no input requested from the user.
         if ($fromform['responseformat'] == 'noinline' && !$fromform['attachments']) {
             $errors['attachments'] = get_string('mustattach', 'qtype_essay');
         }
-
         // If 'no inline response' is set, force the teacher to require attachments;
         // otherwise there will be nothing to grade.
         if ($fromform['responseformat'] == 'noinline' && !$fromform['attachmentsrequired']) {
             $errors['attachmentsrequired'] = get_string('mustrequire', 'qtype_essay');
         }
-
         // Don't allow the teacher to require more attachments than they allow; as this would
         // create a condition that it's impossible for the student to meet.
         if ($fromform['attachments'] != -1 && $fromform['attachments'] < $fromform['attachmentsrequired'] ) {
             $errors['attachmentsrequired']  = get_string('mustrequirefewer', 'qtype_essay');
         }
-
         return $errors;
     }
 
