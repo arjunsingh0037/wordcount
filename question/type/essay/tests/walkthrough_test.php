@@ -51,6 +51,26 @@ class qtype_essay_walkthrough_testcase extends qbehaviour_walkthrough_test_base 
     }
 
     /**
+     * Helper method: Check that a textarea does not contain a given string.
+     *
+     * @param string $name textarea name.
+     * @param string $content string content.
+     * @param int $height textarea height.
+     */
+    protected function check_not_contains_textarea($name, $content = '', $height = 10) {
+        $fieldname = $this->quba->get_field_prefix($this->slot) . $name;
+
+        $this->assertTag(array('tag' => 'textarea',
+            'attributes' => array('cols' => '60', 'rows' => $height,
+                'name' => $fieldname)),
+            $this->currentoutput);
+
+        if ($content) {
+            $this->assertNotRegExp('/' . preg_quote(s($content), '/') . '/', $this->currentoutput);
+        }
+    }
+
+    /**
      * Helper method: Store a test file with a given name and contents in a
      * draft file area.
      *
@@ -180,6 +200,58 @@ class qtype_essay_walkthrough_testcase extends qbehaviour_walkthrough_test_base 
         $this->check_current_output(
                 $this->get_contains_question_text_expectation($q),
                 $this->get_contains_general_feedback_expectation($q));
+    }
+
+    public function test_deferred_feedback_plain_text_responsetemplate() {
+
+        // Create an essay question.
+        $q = test_question_maker::make_question('essay', 'plainresponsetemplate');
+        $this->start_attempt_at_question($q, 'deferredfeedback', 1);
+
+        $prefix = $this->quba->get_field_prefix($this->slot);
+        $fieldname = $prefix . 'answer';
+        $response = "x < 1\nx > 0\nFrog & Toad were friends.";
+
+        // Check the initial state.
+        $this->check_current_state(question_state::$todo);
+        $this->check_current_mark(null);
+        $this->render();
+        $this->check_not_contains_textarea('answer', '<br>');
+        $this->check_current_output(
+            $this->get_contains_question_text_expectation($q),
+            $this->get_does_not_contain_feedback_expectation());
+        $this->check_step_count(1);
+
+        // Save a response.
+        $this->quba->process_all_actions(null, array(
+            'slots'                    => $this->slot,
+            $fieldname                 => $response,
+            $fieldname . 'format'      => FORMAT_HTML,
+            $prefix . ':sequencecheck' => '1',
+        ));
+
+        // Verify.
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(2);
+        $this->render();
+        $this->check_contains_textarea('answer', $response);
+        $this->check_current_output(
+            $this->get_contains_question_text_expectation($q),
+            $this->get_does_not_contain_feedback_expectation());
+        $this->check_step_count(2);
+
+        // Finish the attempt.
+        $this->quba->finish_all_questions();
+
+        // Verify.
+        $this->check_current_state(question_state::$needsgrading);
+        $this->check_current_mark(null);
+        $this->render();
+        $this->assertRegExp('/' . preg_quote(s($response), '/') . '/', $this->currentoutput);
+        $this->check_current_output(
+            $this->get_contains_question_text_expectation($q),
+            $this->get_contains_general_feedback_expectation($q));
     }
 
     public function test_responsetemplate() {

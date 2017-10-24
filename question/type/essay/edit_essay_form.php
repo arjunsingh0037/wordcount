@@ -103,10 +103,17 @@ class qtype_essay_edit_form extends question_edit_form {
         $question->graderinfo['format'] = $question->options->graderinfoformat;
         $question->graderinfo['itemid'] = $draftid;
 
-        $question->responsetemplate = array(
-            'text' => $question->options->responsetemplate,
-            'format' => $question->options->responsetemplateformat,
-        );
+        if ($question->options->responseformat == 'plain') {
+            $question->responsetemplate = array(
+                'text' => text_to_html($question->options->responsetemplate),
+                'format' => $question->options->responsetemplateformat,
+            );
+        } else {
+            $question->responsetemplate = array(
+                'text' => $question->options->responsetemplate,
+                'format' => $question->options->responsetemplateformat,
+            );
+        }
 
         return $question;
     }
