@@ -43,7 +43,9 @@ var manager = {
      */
     _header: null,
 
-    /**
+  _addbutton: null,
+
+  /**
      * The ID of the first checkbox on the page.
      *
      * @property _firstCheckbox
@@ -70,10 +72,16 @@ var manager = {
 
         this._header.on('click', this._headerClick, this);
 
+      this._addbutton = Y.one('input[name="add"]');
+      this._addbutton.setAttrs({
+        disabled: true
+      });
+
         // Store the first checkbox details.
         var table = this._header.ancestor('table');
         this._firstCheckbox = table.one('tbody tr td.checkbox input');
     },
+
 
     /**
      * Handle toggling of the header checkbox.
