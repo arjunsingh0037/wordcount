@@ -43,7 +43,14 @@ var manager = {
      */
     _header: null,
 
-  _addbutton: null,
+    /**
+     * A reference to the add to quiz button.
+     *
+     * @property _addbutton
+     * @type Node
+     * @private
+     */
+      _addbutton: null,
 
   /**
      * The ID of the first checkbox on the page.
@@ -72,10 +79,10 @@ var manager = {
 
         this._header.on('click', this._headerClick, this);
 
-      this._addbutton = Y.one('input[name="add"]');
-      this._addbutton.setAttrs({
-        disabled: true
-      });
+        this._addbutton = Y.one('input[name="add"]');
+        this._addbutton.setAttrs({
+          disabled: true
+        });
 
         // Store the first checkbox details.
         var table = this._header.ancestor('table');
