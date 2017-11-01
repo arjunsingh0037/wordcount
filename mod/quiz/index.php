@@ -129,6 +129,8 @@ $table->align = $align;
 
 // Populate the table with the list of instances.
 $currentsection = '';
+// Get all closing dates.
+$timeclosedates = quiz_get_user_timeclose($course->id);
 foreach ($quizzes as $quiz) {
     $cm = get_coursemodule_from_instance('quiz', $quiz->id);
     $context = context_module::instance($cm->id);
@@ -158,7 +160,7 @@ foreach ($quizzes as $quiz) {
 
     // Close date.
     if ($quiz->timeclose) {
-        $data[] = userdate($quiz->timeclose);
+        $data[] = userdate($timeclosedates[$quiz->id]->usertimeclose);
     } else if ($showclosingheader) {
         $data[] = '';
     }
