@@ -1206,6 +1206,35 @@ function quiz_get_user_image_options() {
 }
 
 /**
+ * Return an user's timeclose for all quizzes in a course, hereby taking into account group and user overrides.
+ *
+ * @param int $courseid the course id.
+ * @return object An object with quizids and unixdates of the most lenient close overrides, if any.
+ */
+function quiz_get_user_timeclose($courseid) {
+    global $DB, $USER;
+
+    $sql = "
+         SELECT iquiz.id,
+           COALESCE(MAX(quo.timeclose), MAX(qgo1.timeclose), MAX(qgo2.timeclose), iquiz.timeclose) AS usertimeclose
+
+           FROM mdl_quiz iquiz
+           JOIN mdl_course icourse ON iquiz.course = icourse.id -- The course the quiz is in.
+      LEFT JOIN mdl_enrol ienrol ON ienrol.courseid = icourse.id -- The enrolments in the course.
+      LEFT JOIN mdl_user_enrolments iuenrol ON iuenrol.enrolid = ienrol.id -- The user_enrolments in the enrolments.
+      LEFT JOIN mdl_user iuser ON iuser.id = iuenrol.userid -- The user in the user_enrolment.
+      LEFT JOIN mdl_groups_members gm ON gm.userid = iuser.id -- The user in the groups.
+      LEFT JOIN mdl_groups igroups ON igroups.id = gm.groupid AND igroups.courseid = icourse.id
+      LEFT JOIN mdl_quiz_overrides quo ON quo.userid = iuser.id AND quo.quiz = iquiz.id
+      LEFT JOIN mdl_quiz_overrides qgo1 ON qgo1.groupid = gm.groupid AND qgo1.timeclose = 0 AND qgo1.quiz = iquiz.id
+      LEFT JOIN mdl_quiz_overrides qgo2 ON qgo2.groupid = gm.groupid AND qgo2.timeclose > 0 AND qgo2.quiz = iquiz.id
+          WHERE icourse.id = :courseid AND iuser.id = :userid
+       GROUP BY iquiz.id, iquiz.timeclose";
+
+    return $DB->get_records_sql($sql, array('courseid' => $courseid, 'userid' => $USER->id));
+}
+
+/**
  * Get the choices to offer for the 'Questions per page' option.
  * @return array int => string.
  */
