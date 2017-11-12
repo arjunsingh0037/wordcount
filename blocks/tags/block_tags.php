@@ -42,10 +42,10 @@ class block_tags extends block_base {
     public function specialization() {
 
         // Load userdefined title and make sure it's never empty.
-        if (empty($this->config->title)) {
-            $this->title = get_string('pluginname', 'block_tags');
+        if (isset($this->config->title)) {
+            $this->title = $this->title = format_string($this->config->title, true, ['context' => $this->context]);
         } else {
-            $this->title = $this->config->title;
+            $this->title = get_string('pluginname', 'block_tags');
         }
     }
 
