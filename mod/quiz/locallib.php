@@ -1206,6 +1206,60 @@ function quiz_get_user_image_options() {
 }
 
 /**
+ * Return an user's timeclose for all quizzes in a course, hereby taking into account group and user overrides.
+ *
+ * @param int $courseid the course id.
+ * @return object An object with quizids and unixdates of the most lenient close overrides, if any.
+ */
+function quiz_get_user_timeclose($courseid) {
+    global $DB, $USER;
+
+    // For teacher and manager/admins return timeclose.
+    if (has_capability('moodle/course:update', context_course::instance($courseid))) {
+        $sql = "SELECT quiz.id, quiz.timeclose AS usertimeclose, quiz.timelimit AS usertimelimit
+                  FROM {quiz} quiz
+                 WHERE quiz.course = :courseid
+              GROUP BY quiz.id";
+
+        $results = $DB->get_records_sql($sql, array('courseid' => $courseid));
+        $endtimes = array();
+        foreach ($results as $result) {
+            $endtimes[(int)($result->id)] = ['usertimeclose' => (int) ($result->usertimeclose), 'usertimelimit' => 0];
+        }
+        return $endtimes;
+    }
+
+    // The multiple qgo JOINS are necessary because we want timeclose/timelimit = 0 (unlimited) to supercede
+    // any other group override.
+
+    $sql = "SELECT quiz.id,
+  COALESCE(MAX(quo.timeclose), MAX(qgo1.timeclose), MAX(qgo2.timeclose), quiz.timeclose) AS usertimeclose,
+  COALESCE(MAX(quo.timelimit), MAX(qgo3.timelimit), MAX(qgo4.timelimit), quiz.timelimit) AS usertimelimit
+       FROM {quiz} quiz
+  LEFT JOIN {quiz_overrides} quo ON quo.quiz = quiz.id
+  LEFT JOIN {groups_members} gm ON gm.userid = quo.userid
+  LEFT JOIN {quiz_overrides} qgo1 ON qgo1.timeclose = 0 AND qgo1.quiz = quiz.id
+  LEFT JOIN {quiz_overrides} qgo2 ON qgo2.timeclose > 0 AND qgo2.quiz = quiz.id
+  LEFT JOIN {quiz_overrides} qgo3 ON qgo3.timelimit = 0 AND qgo3.quiz = quiz.id
+  LEFT JOIN {quiz_overrides} qgo4 ON qgo4.timelimit > 0 AND qgo4.quiz = quiz.id
+                                  AND qgo1.groupid = gm.groupid
+                                  AND qgo2.groupid = gm.groupid
+                                  AND qgo3.groupid = gm.groupid
+                                  AND qgo4.groupid = gm.groupid
+      WHERE quiz.course = :courseid
+            AND ((quo.userid = :userid) OR ((gm.userid IS NULL) AND (quo.userid IS NULL)))
+   GROUP BY quiz.id";
+
+    $results = $DB->get_records_sql($sql, array('courseid' => $courseid, 'userid' => $USER->id));
+    $endtimes = array();
+    foreach ($results as $result) {
+        $endtimes[(int)($result->id)] = ['usertimeclose' => (int) ($result->usertimeclose),
+            'usertimelimit' => (int) ($result->usertimelimit)];
+    }
+    return $endtimes;
+}
+
+/**
  * Get the choices to offer for the 'Questions per page' option.
  * @return array int => string.
  */
