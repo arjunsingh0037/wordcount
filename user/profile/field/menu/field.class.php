@@ -60,7 +60,7 @@ class profile_field_menu extends profile_field_base {
         }
         foreach ($options as $key => $option) {
             // Multilang formatting with filters.
-            $this->options[$option] = format_string($option, true, ['context' => context_system::instance()]);
+            $this->options[$key] = $option;
         }
 
         // Set the data key.
@@ -89,6 +89,10 @@ class profile_field_menu extends profile_field_base {
      * @param moodleform $mform Moodle form instance
      */
     public function edit_field_add($mform) {
+        $context = ($this->userid > 0) ? context_user::instance($this->userid) : context_system::instance();
+        foreach ($this->options as $key => $option) {
+            $this->options[$key] = format_string($option, true, array('context' => $context));
+        }
         $mform->addElement('select', $this->inputname, format_string($this->field->name), $this->options);
     }
 
@@ -98,7 +102,8 @@ class profile_field_menu extends profile_field_base {
      * @param moodleform $mform Moodle form instance
      */
     public function edit_field_set_default($mform) {
-        $key = $this->field->defaultdata;
+        $context = ($this->userid > 0) ? context_user::instance($this->userid) : context_system::instance();
+        $key = format_string($this->field->defaultdata, true, array('context' => $context));
         if (isset($this->options[$key]) || ($key = array_search($key, $this->options)) !== false){
             $defaultkey = $key;
         } else {
