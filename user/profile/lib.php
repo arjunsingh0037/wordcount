@@ -537,11 +537,17 @@ function profile_get_user_fields_with_data($userid) {
  * @return profile_field_base[][]
  */
 function profile_get_user_fields_with_data_by_category($userid) {
+
     $fields = profile_get_user_fields_with_data($userid);
     $data = [];
     foreach ($fields as $field) {
+        if ($field->field->datatype === "menu") {
+            $context = ($userid > 0) ? context_user::instance($userid) : context_system::instance();
+            $field->data = format_string($field->data, true, array('context' => $context));
+        }
         $data[$field->field->categoryid][] = $field;
     }
+    print_r($data);
     return $data;
 }
 
